@@ -1,0 +1,51 @@
+{
+    "name": "anti/craft-oembed",
+    "description": "Fetch and cache data from oEmbed APIs.",
+    "type": "craft-plugin",
+    "version": "1.0.0",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "craft oemebed"
+    ],
+    "support": {
+        "docs": "https://github.com/anewtypeofinterference/craft-oembed/blob/master/README.md",
+        "issues": "https://github.com/anewtypeofinterference/craft-oembed/issues"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Lasse Mejlvang Tvedt",
+            "homepage": "https://anti.as"
+        }
+    ],
+    "require": {
+        "craftcms/cms": "^3.0.0",
+        "anti/craft-fetch": "dev-main"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:anewtypeofinterference/craft-fetch.git"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+          "anti\\oembed\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "Craft oEmbed",
+        "handle": "oembed",
+        "developer": "Lasse Mejlvang Tvedt",
+        "developerUrl": "https://anti.as",
+        "documentationUrl": "https://github.com/anewtypeofinterference/craft-oembed/blob/master/README.md",
+        "changelogUrl": "https://raw.githubusercontent.com/anewtypeofinterference/craft-oembed/master/CHANGELOG.md",
+        "components": {},
+        "class": "anti\\oembed\\oEmbed"
+    }
+}
