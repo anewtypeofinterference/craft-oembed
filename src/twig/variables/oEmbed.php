@@ -24,9 +24,9 @@ class oEmbed
    * @return mixed
    * @throws DeprecationException
    */
-  public function getData($url)
+  public function get($url)
   {
-    return Plugin::$plugin->oembed->getData($url);
+    return Plugin::$plugin->oembed->get($url);
   }
 
 }

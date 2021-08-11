@@ -9,12 +9,16 @@
 namespace anti\oembed;
 
 use anti\oembed\services\oEmbed as oEmbedService;
+use anti\oembed\services\Providers;
 use anti\oembed\twig\variables\oEmbed as oEmbedVariable;
 use anti\oembed\models\Settings;
 
 use Craft;
 use craft\base\Plugin;
 use craft\web\twig\variables\CraftVariable;
+
+use craft\events\RegisterCacheOptionsEvent;
+use craft\utilities\ClearCaches;
 
 use yii\base\Event;
 
@@ -55,8 +59,21 @@ class oEmbed extends Plugin
 
         // Register services
         $this->setComponents([
-          'oembed' => oEmbedService::class
+          'oembed' => oEmbedService::class,
+          'providers' => Providers::class
         ]);
+
+        Event::on(
+          ClearCaches::class,
+          ClearCaches::EVENT_REGISTER_TAG_OPTIONS,
+          function(RegisterCacheOptionsEvent $event)
+          {
+            $event->options[] = [
+              'tag' => 'oembed',
+              'label' => Craft::t('oembed', 'oEmbed caches'),
+            ];
+          }
+        );
 
         // Register variable
         Event::on(
@@ -82,6 +99,10 @@ class oEmbed extends Plugin
             ),
             __METHOD__
         );
+    }
+
+    public function getConfigPath() {
+      return $this->getBasePath() . DIRECTORY_SEPARATOR . 'config'  . DIRECTORY_SEPARATOR;
     }
 
     // Protected Methods

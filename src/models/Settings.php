@@ -20,5 +20,8 @@ use craft\helpers\ConfigHelper;
  */
 class Settings extends Model
 {
-    
+  /**
+   * @var array Additional providers.
+   */
+  public $providers = [];
 }
