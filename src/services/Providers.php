@@ -18,19 +18,23 @@ class Providers extends Component
 {
   private static $providers;
 
-  private static function getProviders(): array
+  static function getProviders($pick = null): array
   {
     if (!is_array(self::$providers)) {
       $settings = Plugin::getInstance()->getSettings();
       self::$providers = array_merge(require Plugin::getInstance()->getConfigPath() . 'DefaultProviders.php', $settings['providers']);
     }
 
+    if(is_array($pick)) {
+      return array_intersect_key(self::$providers, array_flip($pick));
+    }
+
     return self::$providers;
   }
 
-  public function detectProviderFromUrl(string $url): ?string
+  public function detectProviderFromUrl(string $url, ?array $allowedProviders = null): ?string
   {
-    return self::searchEndpoint(self::getProviders(), $url);
+    return self::searchEndpoint(self::getProviders($allowedProviders), $url);
   }
 
   public function getProvider(string $handle): ?array

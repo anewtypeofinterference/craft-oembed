@@ -1,0 +1,24 @@
+{%- set class = (class ?? [])|explodeClass|merge([
+  not (size ?? false) ? 'fullwidth' : null,
+]|filter) %}
+
+{#             'id' => "$id-preview",
+            'inputId' => "$id",
+            'class' => ['flex-grow', 'fullwidth'],
+            'value' => $value #}
+
+<div id="{{ id }}" class="oEmbedPreview">
+  {% set data = errors is empty and value ? craft.oembed.get(value) : null %}
+  {% if data %}
+    {% switch data.type %}
+      {% case "rich" or "video" %}
+        {{ data.html|raw }}
+      {% case "photo" %}
+        <img src="{{ data.url }}" alt="{{ data.title ?? '' }}" width="{{ data.width }}" height="{{ data.height }}" />
+    {% endswitch %}
+  {% endif %}
+</div>{% set jsId = id|namespaceInputId|e('js') %}
+
+{% js %}
+  new ANTI.oEmbedPreview(document.getElementById("{{ id|namespaceInputId|e('js') }}"), document.getElementById("{{ inputId|namespaceInputId|e('js') }}"), JSON.parse('{{ providers|json_encode|raw }}'));
+{% endjs %}

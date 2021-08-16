@@ -8,17 +8,18 @@
 
 namespace anti\oembed;
 
+use anti\oembed\models\Settings;
 use anti\oembed\services\oEmbed as oEmbedService;
 use anti\oembed\services\Providers;
 use anti\oembed\twig\variables\oEmbed as oEmbedVariable;
-use anti\oembed\models\Settings;
 
 use Craft;
 use craft\base\Plugin;
-use craft\web\twig\variables\CraftVariable;
-
-use craft\events\RegisterCacheOptionsEvent;
+use craft\services\Fields;
 use craft\utilities\ClearCaches;
+use craft\web\twig\variables\CraftVariable;
+use craft\events\RegisterComponentTypesEvent;
+use craft\events\RegisterCacheOptionsEvent;
 
 use yii\base\Event;
 
@@ -63,6 +64,7 @@ class oEmbed extends Plugin
           'providers' => Providers::class
         ]);
 
+        // Caching
         Event::on(
           ClearCaches::class,
           ClearCaches::EVENT_REGISTER_TAG_OPTIONS,
@@ -72,6 +74,15 @@ class oEmbed extends Plugin
               'tag' => 'oembed',
               'label' => Craft::t('oembed', 'oEmbed caches'),
             ];
+          }
+        );
+
+        // Register our field type.
+        Event::on(
+          Fields::class,
+          Fields::EVENT_REGISTER_FIELD_TYPES,
+          function(RegisterComponentTypesEvent $event) {
+            $event->types[] = Field::class;
           }
         );
 
