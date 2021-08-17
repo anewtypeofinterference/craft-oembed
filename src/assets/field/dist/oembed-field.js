@@ -1,3 +1,7 @@
+//
+// Docs: https://github.com/craftcms/cms/blob/develop/src/web/assets/cp/src/js/Craft.js
+//
+
 var ANTI = ANTI || {};
 
 class oEmbedPreview {
