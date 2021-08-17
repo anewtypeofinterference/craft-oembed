@@ -15,14 +15,18 @@ To install the plugin, follow these instructions.
         cd /path/to/project
 
 2. Then tell Composer to load the plugin:
-	Since this is a private package hosted on github you need to tell composer where to find this package. Add the following code to your `composer.json`: 
+	Since this is a private package hosted on github you need to tell composer where to find this package. Add the following code to your `composer.json` (also note how craft-fetch path is also added):
 	```
-	"repositories": [
-		{
-	  		"type": "vcs",
-	  		"url": "git@github.com:anewtypeofinterference/craft-oembed.git"
-		}
-	]
+  "repositories": [
+    {
+      "type": "path",
+      "url": "git@github.com:anewtypeofinterference/craft-oembed.git"
+    },
+    {
+      "type": "vcs",
+      "url": "git@github.com:anewtypeofinterference/craft-fetch.git"
+    }
+  ]
 	```
 	Note, repositories might already exisit in your project, then you just have to add the object to the exisitng property.
 
@@ -35,3 +39,13 @@ To install the plugin, follow these instructions.
 
 
 ## Using Craft oEmbed
+Craft oEmbed comes with a field you can create which validates and display oEmbeds in the admin panel. In the front end the field outputs the url, so you have to run it through the service to fetch the oembed data:
+```
+{% set oembedData = craft.oembed.get(entry.yourOembed/URLfield) %}
+```
+The data outputted is following the [oembed spec (see response parameters section)](https://oembed.com/)
+You can also add consuomer ptions request data when fetching the data:
+```
+{% set oembedData = craft.oembed.get(entry.yourOembed, {
+  maxwidth: 1920
+}) %}
