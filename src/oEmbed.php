@@ -120,6 +120,6 @@ class oEmbed extends Plugin
     // =========================================================================
     protected function createSettingsModel()
     {
-        return new Settings();
+      return new Settings();
     }
 }

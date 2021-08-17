@@ -24,4 +24,14 @@ class Settings extends Model
    * @var array Additional providers.
    */
   public $providers = [];
+
+  /**
+   * @var array Additional providers.
+   */
+  public $tokens = [];
+
+  public function getToken(string $provider): string|null
+  {
+    return $this->tokens[$provider] ?? null;
+  }
 }

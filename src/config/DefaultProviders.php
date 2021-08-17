@@ -9,23 +9,26 @@ return [
     ],
     'facebook' => [
         'label' => 'Facebook',
-        'url' => 'https://www.facebook.com/plugins/post/oembed.json',
+        'tokenKey' => 'access_token',
+        'url' => 'https://graph.facebook.com/v11.0/oembed_post',
+        'tokenKey' => 'access_token',
         'patterns' => [
-            '|^https?://www\\.facebook\\.com/.*/posts/.*$|i',
-            '|^https?://www\\.facebook\\.com/photos/.*$|i',
-            '|^https?://www\\.facebook\\.com/.*/photos/.*$|i',
-            '|^https?://www\\.facebook\\.com/photo\\.php.*$|i',
-            '|^https?://www\\.facebook\\.com/photo\\.php$|i',
-            '|^https?://www\\.facebook\\.com/.*/activity/.*$|i',
-            '|^https?://www\\.facebook\\.com/permalink\\.php$|i',
-            '|^https?://www\\.facebook\\.com/media/set\\?set\\=.*$|i',
-            '|^https?://www\\.facebook\\.com/questions/.*$|i',
-            '|^https?://www\\.facebook\\.com/notes/.*/.*/.*$|i',
+          '|^https?://www\\.facebook\\.com/.*/posts/.*$|i',
+          '|^https?://www\\.facebook\\.com/photos/.*$|i',
+          '|^https?://www\\.facebook\\.com/.*/photos/.*$|i',
+          '|^https?://www\\.facebook\\.com/photo\\.php.*$|i',
+          '|^https?://www\\.facebook\\.com/photo\\.php$|i',
+          '|^https?://www\\.facebook\\.com/.*/activity/.*$|i',
+          '|^https?://www\\.facebook\\.com/permalink\\.php$|i',
+          '|^https?://www\\.facebook\\.com/media/set\\?set\\=.*$|i',
+          '|^https?://www\\.facebook\\.com/questions/.*$|i',
+          '|^https?://www\\.facebook\\.com/notes/.*/.*/.*$|i',
         ],
     ],
     'facebookVideo' => [
         'label' => 'Facebook Video',
-        'url' => 'https://www.facebook.com/plugins/video/oembed.json',
+        'url' => 'https://graph.facebook.com/v11.0/oembed_video.json',
+        'tokenKey' => 'access_token',
         'patterns' => [
             '|^https?://www\\.facebook\\.com/.*/videos/.*$|i',
             '|^https?://www\\.facebook\\.com/video\\.php$|i',
@@ -42,7 +45,8 @@ return [
     ],
     'instagram' => [
       'label' => 'Instagram',
-      'url' => 'https://api.instagram.com/oembed',
+      'url' => 'https://graph.facebook.com/v11.0/instagram_oembed',
+      'tokenKey' => 'access_token',
       'patterns' => [
         '|^https?://instagram\\.com/.*/p/.*,$|i',
         '|^https?://www\\.instagram\\.com/.*/p/.*,$|i',
@@ -70,13 +74,13 @@ return [
             '|^https?://www\\.kickstarter\\.com/projects/.*$|i',
         ],
     ],
-    'nasjonalbiblioteket' => [
-        'label' => 'Nasjonalbiblioteket',
-        'url' => 'https://api.nb.no/catalog/v1/oembed',
-        'patterns' => [
-            '|^https?://www\\.nb\\.no/items/.*$|i',
-        ],
-    ],
+    // 'nasjonalbiblioteket' => [
+    //     'label' => 'Nasjonalbiblioteket',
+    //     'url' => 'https://api.nb.no/catalog/v1/oembed',
+    //     'patterns' => [
+    //         '|^https?://www\\.nb\\.no/items/.*$|i',
+    //     ],
+    // ],
     'reddit' => [
         'label' => 'Reddit',
         'url' => 'https://www.reddit.com/oembed',
@@ -136,15 +140,15 @@ return [
             '|^https?://.*\\.tiktok\\.com/.*$|i',
         ],
     ],
-    'twitch' => [
-        'label' => 'Twitch',
-        'url' => 'https://api.twitch.tv/v5/oembed',
-        'patterns' => [
-            '|^https?://clips\\.twitch\\.tv/.*$|i',
-            '|^https?://www\\.twitch\\.tv/.*$|i',
-            '|^https?://twitch\\.tv/.*$|i',
-        ],
-    ],
+    // 'twitch' => [
+    //     'label' => 'Twitch',
+    //     'url' => 'https://api.twitch.tv/v5/oembed',
+    //     'patterns' => [
+    //         '|^https?://clips\\.twitch\\.tv/.*$|i',
+    //         '|^https?://www\\.twitch\\.tv/.*$|i',
+    //         '|^https?://twitch\\.tv/.*$|i',
+    //     ],
+    // ],
     'twitter' => [
         'label' => 'Twitter',
         'url' => 'https://publish.twitter.com/oembed',

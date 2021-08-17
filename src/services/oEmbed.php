@@ -9,7 +9,6 @@
 namespace anti\oembed\services;
 
 use anti\oembed\oEmbed as Plugin;
-use anti\oembed\models\Settings;
 
 use Craft;
 use craft\base\Component;
@@ -61,25 +60,45 @@ class oEmbed extends Component
   }
 
   private function getDataFromUrl($url, $options) {
-    $provider = Plugin::$plugin->providers->detectProviderFromUrl($url);
+    $providerHandle = Plugin::$plugin->providers->detectProviderFromUrl($url);
 
-    if(!$provider) {
+    if(!$providerHandle) {
       return null;
     }
 
-    $providerUrl = Plugin::$plugin->providers->getProviderUrl($provider);
+    $provider = Plugin::$plugin->providers->getProvider($providerHandle);
 
-    if($providerUrl) {
-      $oEmbedUrl = UrlHelper::url($providerUrl, array_merge([
+    if(isset($provider['url']) && $provider['url']) {
+      $optionsMerged = array_merge([
         'format' => 'json',
         'url' => $url
-      ], $options));
+      ], $options);
+
+      // Check if access is required
+      if(isset($provider['tokenKey']) && $provider['tokenKey']) {
+        $token = Plugin::getInstance()->getSettings()->getToken($providerHandle);
+
+        if(!$token) {
+          return null;
+        }
+
+        $optionsMerged[$provider['tokenKey']] = $token;
+      }
+
+      $oEmbedUrl = UrlHelper::url($provider['url'], $optionsMerged);
 
       // Use fetch plugin to get data
       $data = Fetch::$plugin->client->get($oEmbedUrl, [], false)['body'] ?? null;
 
       if($data) {
         $data['provider'] = $provider;
+      }
+
+      if(isset($data['html'])) {
+        $dom = new DOMDocument;
+        $dom->loadHTML($data['html']);
+        $iframe = $dom->getElementsByTagName('iframe')->item(0);
+        $data['embed_url'] = $iframe->getAttribute('src');
       }
 
       return $data;
