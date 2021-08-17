@@ -15,22 +15,22 @@ To install the plugin, follow these instructions.
         cd /path/to/project
 
 2. Then tell Composer to load the plugin:
-	Since this is a private package hosted on github you need to tell composer where to find this package. Add the following code to your `composer.json` (also note how craft-fetch path is also added):
+Since this is a private package hosted on github you need to tell composer where to find this package. Add the following code to your `composer.json` (also note how craft-fetch path is also added):
 	```
-  "repositories": [
-    {
-      "type": "path",
-      "url": "git@github.com:anewtypeofinterference/craft-oembed.git"
-    },
-    {
-      "type": "vcs",
-      "url": "git@github.com:anewtypeofinterference/craft-fetch.git"
-    }
-  ]
+	  "repositories": [
+	    {
+	      "type": "vcs",
+	      "url": "git@github.com:anewtypeofinterference/craft-oembed.git"
+	    },
+	    {
+	      "type": "vcs",
+	      "url": "git@github.com:anewtypeofinterference/craft-fetch.git"
+	    }
+	  ]
 	```
-	Note, repositories might already exisit in your project, then you just have to add the object to the exisitng property.
+Note, repositories might already exisit in your project, then you just have to add the object to the exisitng property.
 
-	Then you run `composer require anti/craft-oembed` as usual. You might get asked to authenticate yourself, if so, follow instructions from composer.
+Then you run `composer require anti/craft-oembed` as usual. You might get asked to authenticate yourself, if so, follow instructions from composer.
 
 3. In the Control Panel, go to Settings → Plugins and click the “Install” button for Craft Fetch.
 
