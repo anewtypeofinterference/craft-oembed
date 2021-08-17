@@ -12,9 +12,8 @@ use anti\oembed\oEmbed as Plugin;
 
 use craft\base\Model;
 use craft\validators\UrlValidator;
-use craft\helpers\Json;
 
-class OembedModel extends Model
+class oEmbedModel extends Model
 {
   /**
    * @var string

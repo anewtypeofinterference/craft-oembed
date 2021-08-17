@@ -23,7 +23,7 @@
     ],
     "require": {
         "craftcms/cms": "^3.0.0",
-        "anti/craft-fetch": "dev-main"
+        "anti/craft-fetch": "^1.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
