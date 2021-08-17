@@ -19,7 +19,7 @@ Since this is a private package hosted on github you need to tell composer where
 	```
 	  "repositories": [
 	    {
-	      "type": "path",
+	      "type": "vcs",
 	      "url": "git@github.com:anewtypeofinterference/craft-oembed.git"
 	    },
 	    {
