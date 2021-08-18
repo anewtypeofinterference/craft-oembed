@@ -11,6 +11,7 @@ namespace anti\oembed;
 use anti\oembed\services\Providers;
 use anti\oembed\oEmbed as Plugin;
 use anti\oembed\assets\field\FieldAsset;
+use anti\oembed\models\oEmbedData;
 
 use Craft;
 use craft\base\PreviewableFieldInterface;
@@ -33,205 +34,206 @@ function natural_language_join(array $list, $conjunction = 'and') {
 
 class Field extends \craft\base\Field implements PreviewableFieldInterface
 {
-    /**
-     * @inheritdoc
-     */
-    public static function displayName(): string
-    {
-        return Craft::t('oembed', 'oEmbed');
+  /**
+   * @inheritdoc
+   */
+  public static function displayName(): string
+  {
+    return Craft::t('oembed', 'oEmbed');
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public static function valueType(): string
+  {
+    return oEmbedData::class . '|null';
+  }
+
+  /**
+   * @var array|null The providers that the field should be restricted to
+   */
+  public $allowedProviders = [];
+
+  /**
+   * @var int The maximum length (in bytes) the field can hold
+   */
+  public $maxLength = 255;
+
+  /**
+   * @inheritdoc
+   */
+  public function fields()
+  {
+    $fields = parent::fields();
+
+    return $fields;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  protected function defineRules(): array
+  {
+    $rules = parent::defineRules();
+    $rules[] = [['maxLength'], 'number', 'integerOnly' => true, 'min' => 10];
+
+    return $rules;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function getContentColumnType(): string
+  {
+    return Schema::TYPE_STRING . "({$this->maxLength})";
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function getSettingsHtml()
+  {
+    return
+      Cp::checkboxSelectFieldHtml([
+        'label' => Craft::t('oembed', 'Allowed Providers'),
+        'id' => 'allowedProviders',
+        'name' => 'allowedProviders',
+        'options' => Providers::getOptions(),
+        'values' => $this->allowedProviders,
+        'required' => false,
+      ]) .
+      Cp::textFieldHtml([
+        'label' => Craft::t('oembed', 'Max Length'),
+        'instructions' => Craft::t('app', 'The maximum length (in bytes) the field can hold.'),
+        'id' => 'maxLength',
+        'name' => 'maxLength',
+        'type' => 'number',
+        'min' => '10',
+        'step' => '10',
+        'value' => $this->maxLength,
+        'errors' => $this->getErrors('maxLength'),
+      ]);
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function normalizeValue($value, ElementInterface $element = null)
+  {
+    if ($value instanceof oEmbedData) {
+      return $value;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public static function valueType(): string
-    {
-        return 'string|null';
+    $value = trim($value);
+
+    if (!UrlHelper::isFullUrl($value)) {
+      $value = StringHelper::ensureLeft($value, 'http://');
     }
 
-    /**
-     * @var array|null The providers that the field should be restricted to
-     */
-    public $allowedProviders = [];
-
-    /**
-     * @var int The maximum length (in bytes) the field can hold
-     */
-    public $maxLength = 255;
-
-    /**
-     * @inheritdoc
-     */
-    public function fields()
-    {
-        $fields = parent::fields();
-
-        return $fields;
+    if (!$value || $value === 'http://') {
+      return null;
     }
 
-    /**
-     * @inheritdoc
-     */
-    protected function defineRules(): array
-    {
-        $rules = parent::defineRules();
-        $rules[] = [['maxLength'], 'number', 'integerOnly' => true, 'min' => 10];
+    return new oEmbedData($value);
+  }
 
-        return $rules;
+  public function serializeValue($value, ElementInterface $element = null)
+  {
+    return $value ? $value->getUrl() : null;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function getElementValidationRules(): array
+  {
+    return [
+      ['trim'],
+      ['validateUrl'],
+      ['validateProvider']
+    ];
+  }
+
+  /**
+   * Validates the files to make sure it is URL
+   *
+   * @param ElementInterface $element
+   */
+  public function validateUrl(ElementInterface $element)
+  {
+    $validator = new UrlValidator;
+    $fieldData = $element->getFieldValue($this->handle);
+
+    if(!$validator->validate($fieldData->getUrl())) {
+      $element->addError($this->handle, Craft::t('oembed', $validator->message, [
+        'attribute' => $this->name,
+      ]));
+    }
+  }
+
+  /**
+   * Validates the files to make sure they are one of the allowed file kinds.
+   *
+   * @param ElementInterface $element
+   */
+  public function validateProvider(ElementInterface $element)
+  {
+    // Make sure the field restricts file types
+    if (empty($this->allowedProviders)) {
+      return;
     }
 
-    /**
-     * Returns the available file kind options for the settings
-     *
-     * @return array
-     */
-    public function getProviderOptions($pick = null): array
-    {
-        $providerOptions = [];
+    $url = $element->getFieldValue($this->handle);
 
-        foreach (Providers::getProviders($pick) as $handle => $options) {
-            $providerOptions[] = ['value' => $handle, 'label' => $options['label']];
-        }
+    // Check if provider is valid
+    if (!Plugin::$plugin->providers->detectProviderFromUrl($url, $this->allowedProviders)) {
+      $element->addError($this->handle, Craft::t('oembed', 'Only {allowedProviders} is allowed in this field.', [
+        'allowedProviders' => natural_language_join(array_map(fn($p): string => $p['label'], Providers::getOptions($this->allowedProviders))),
+      ]));
 
-        return $providerOptions;
+      return;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function getContentColumnType(): string
-    {
-        return Schema::TYPE_STRING . "({$this->maxLength})";
+    // Try fetching data
+    if(!Plugin::$plugin->oembed->get($url)) {
+      $element->addError($this->handle, Craft::t('oembed', "No data was returned from provided URL. Make sure if the URL is correct."));
     }
+  }
 
-    /**
-     * @inheritdoc
-     */
-    public function getSettingsHtml()
-    {
-        return
-            Cp::checkboxSelectFieldHtml([
-                'label' => Craft::t('oembed', 'Allowed Providers'),
-                'id' => 'allowedProviders',
-                'name' => 'allowedProviders',
-                'options' => $this->getProviderOptions(),
-                'values' => $this->allowedProviders,
-                'required' => false,
-            ]) .
-            Cp::textFieldHtml([
-                'label' => Craft::t('oembed', 'Max Length'),
-                'instructions' => Craft::t('app', 'The maximum length (in bytes) the field can hold.'),
-                'id' => 'maxLength',
-                'name' => 'maxLength',
-                'type' => 'number',
-                'min' => '10',
-                'step' => '10',
-                'value' => $this->maxLength,
-                'errors' => $this->getErrors('maxLength'),
-            ]);
-    }
+  /**
+   * @inheritdoc
+   */
+  protected function inputHtml($value, ElementInterface $element = null): string
+  {
+    $id = Html::id($this->handle);
+    $view = Craft::$app->getView();
+    $view->registerAssetBundle(FieldAsset::class);
 
-    /**
-     * @inheritdoc
-     */
-    public function normalizeValue($value, ElementInterface $element = null)
-    {
-        if (is_array($value) && isset($value['value'])) {
-            $value = trim($value['value']);
+    $input = $view->renderTemplate('_includes/forms/text', [
+      'id' => $id,
+      'instructionsId' => "$id-instructions",
+      'class' => ['flex-grow', 'fullwidth'],
+      'type' => 'url',
+      'name' => $this->handle,
+      'inputmode' => 'url',
+      'value' => $value->getUrl(),
+      'inputAttributes' => [
+        'aria' => [
+          'label' => Craft::t('site', $this->name),
+        ],
+      ],
+    ]);
 
-            if ($value) {
-                if (!UrlHelper::isFullUrl($value)) {
-                    $value = StringHelper::ensureLeft($value, 'http://');
-                }
-            }
-        }
+    $preview = $view->renderTemplate('oembed/_includes/preview', [
+      'id' => "$id-preview",
+      'inputId' => "$id",
+      'class' => ['flex-grow', 'fullwidth'],
+      'value' => $value,
+      'providers' => $this->allowedProviders,
+      'errors' => $element->getErrors($this->handle) ?? null,
+    ]);
 
-        if ($value === '') {
-            return null;
-        }
-
-        return $value;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getElementValidationRules(): array
-    {
-
-        $rules[] = 'validateProvider';
-        //
-        // TODO: Check if provider is allowed
-        //
-        return [
-            ['trim'],
-            [UrlValidator::class],
-            ['validateProvider']
-        ];
-    }
-
-    /**
-     * Validates the files to make sure they are one of the allowed file kinds.
-     *
-     * @param ElementInterface $element
-     */
-    public function validateProvider(ElementInterface $element)
-    {
-        // Make sure the field restricts file types
-        if (empty($this->allowedProviders)) {
-            return;
-        }
-
-        $url = $element->getFieldValue($this->handle);
-
-        // Check if provider is valid
-        if (!Plugin::$plugin->providers->detectProviderFromUrl($url, $this->allowedProviders)) {
-            $element->addError($this->handle, Craft::t('oembed', 'Only {allowedProviders} is allowed in this field.', [
-                'allowedProviders' => natural_language_join(array_map(fn($p): string => $p['label'], $this->getProviderOptions($this->allowedProviders))),
-            ]));
-
-            return;
-        }
-
-        // Try fetching data
-        if(!Plugin::$plugin->oembed->get($url)) {
-            $element->addError($this->handle, Craft::t('oembed', "No data was returned from provided URL. Make sure if the URL is correct."));
-        }
-    }
-
-    /**
-     * @inheritdoc
-     */
-    protected function inputHtml($value, ElementInterface $element = null): string
-    {
-        $id = Html::id($this->handle);
-        $view = Craft::$app->getView();
-        $view->registerAssetBundle(FieldAsset::class);
-
-        $input = $view->renderTemplate('_includes/forms/text', [
-            'id' => $id,
-            'instructionsId' => "$id-instructions",
-            'class' => ['flex-grow', 'fullwidth'],
-            'type' => 'url',
-            'name' => "$this->handle[value]",
-            'inputmode' => 'url',
-            'value' => $value,
-            'inputAttributes' => [
-                'aria' => [
-                    'label' => Craft::t('site', $this->name),
-                ],
-            ],
-        ]);
-
-        $preview = $view->renderTemplate('oembed/_includes/preview', [
-            'id' => "$id-preview",
-            'inputId' => "$id",
-            'class' => ['flex-grow', 'fullwidth'],
-            'value' => $value,
-            'providers' => $this->allowedProviders,
-            'errors' => $element->getErrors($this->handle) ?? null,
-        ]);
-
-        return $input . $preview;
-    }
+    return $input . $preview;
+  }
 }

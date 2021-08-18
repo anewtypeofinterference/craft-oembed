@@ -13,7 +13,6 @@ use anti\oembed\oEmbed as Plugin;
 use Craft;
 use craft\base\Component;
 use craft\helpers\ConfigHelper;
-use craft\helpers\UrlHelper;
 
 use anti\fetch\Fetch;
 
@@ -25,7 +24,6 @@ class oEmbed extends Component
    * @param string $url URL for service entry to embed
    *
    * @return array|null
-   * @throws DeprecationException
    */
   public function get(string $url, array $options = [], $cache = true)
   {
@@ -59,52 +57,40 @@ class oEmbed extends Component
     return $data;
   }
 
-  private function getDataFromUrl($url, $options) {
-    $providerHandle = Plugin::$plugin->providers->detectProviderFromUrl($url);
+  private function getDataFromUrl(string $url, ?array $options): ?array
+  {
+    $provider = Plugin::$plugin->providers->detectProviderFromUrl($url);
 
-    if(!$providerHandle) {
+    if(!$provider) {
       return null;
     }
 
-    $provider = Plugin::$plugin->providers->getProvider($providerHandle);
+    // Use fetch plugin to get data
+    $data = Fetch::$plugin->client->get($provider->buildUrl($url, $options), [], false)['body'] ?? null;
 
-    if(isset($provider['url']) && $provider['url']) {
-      $optionsMerged = array_merge([
-        'format' => 'json',
-        'url' => $url
-      ], $options);
-
-      // Check if access is required
-      if(isset($provider['tokenKey']) && $provider['tokenKey']) {
-        $token = Plugin::getInstance()->getSettings()->getToken($providerHandle);
-
-        if(!$token) {
-          return null;
-        }
-
-        $optionsMerged[$provider['tokenKey']] = $token;
-      }
-
-      $oEmbedUrl = UrlHelper::url($provider['url'], $optionsMerged);
-
-      // Use fetch plugin to get data
-      $data = Fetch::$plugin->client->get($oEmbedUrl, [], false)['body'] ?? null;
-
-      if($data) {
-        $data['provider'] = $provider;
-      }
-
-      if(isset($data['html'])) {
-        $dom = new DOMDocument;
-        $dom->loadHTML($data['html']);
-        $iframe = $dom->getElementsByTagName('iframe')->item(0);
-        $data['embed_url'] = $iframe->getAttribute('src');
-      }
-
-      return $data;
+    if(!$data) {
+      return null;
     }
 
-    return null;
+    $data['provider'] = $provider->handle;
+    $data['embedSrc'] = null;
+
+    if(isset($data['html'])) {
+      $dom = new \DOMDocument('1.0', 'UTF-8');
+      //
+      // Fix for parsing errors due to bad formated code
+      // https://stackoverflow.com/a/10482622/1719789
+      //
+      // set error level
+      $internalErrors = libxml_use_internal_errors(true);
+      $dom->loadHTML($data['html']);
+      // Restore error level
+      libxml_use_internal_errors($internalErrors);
+      $iframe = $dom->getElementsByTagName('iframe')->item(0);
+      $data['embedSrc'] = $iframe ? $iframe->getAttribute('src') : null;
+    }
+
+    return $data;
   }
 
   /**

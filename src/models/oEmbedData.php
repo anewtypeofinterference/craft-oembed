@@ -1,5 +1,6 @@
 <?php
 /**
+/**
  * Craft oEmbed plugin for Craft CMS 3.x
  *
  * @link      https://anti.as
@@ -7,44 +8,69 @@
  */
 namespace anti\oembed\models;
 
-use Craft;
+use anti\oembed\oEmbed as Plugin;
+use anti\oembed\models\Provider;
+
 use craft\base\Model;
 use craft\validators\UrlValidator;
+use craft\helpers\UrlHelper;
 
 class oEmbedData extends Model
 {
   /**
    * @var string
    */
-	public $url;
+  private $_url;
 
   /**
-   * @var array|null
+   * OembedModel constructor.
+   * @param string $url
    */
-	public $options = null;
-
-  /**
-   * @var array
-   */
-  public $allowedProviders = [];
-
-  /**
-   * @inheritdoc
-   */
-  public function attributeLabels()
+  public function __construct(string $url, array $config = [])
   {
-    return [
-      'url' => Craft::t('oembed', 'URL'),
-      'options' => Craft::t('oembed', 'Embed options'),
-      'allowedProviders' => Craft::t('oembed', 'Allowed providers'),
-    ];
+    $this->_url = $url;
+
+    parent::__construct($config);
+  }
+
+  public function __toString()
+  {
+    return $this->_url;
+  }
+
+  /**
+   * Returns url
+   *
+   * @return string
+   */
+  public function getUrl(): string
+  {
+    return $this->_url;
+  }
+
+  public function getData(array $options = [], bool $cache = true): ?array
+  {
+    return Plugin::getInstance()->oembed->get($this->_url, $options, $cache);
+  }
+
+  public function getEmbedSrc(array $queryParams = [], array $options = [], bool $cache = true): ?string
+  {
+    $data = $this->getData($options, $cache);
+
+    if($data && $data['embedSrc']) {
+      return UrlHelper::url($data['embedSrc'], $queryParams);
+    }
+
+    return null;
   }
 
   public function rules()
   {
-    return [
-      [['url'], 'required'],
-      [['url'], UrlValidator::class]
-    ];
+    $rules = parent::defineRules();
+    $rules[] = [['_url'], 'trim'];
+    $rules[] = [['_url'], 'required'];
+    $rules[] = [['_url'], UrlValidator::class];
+
+    return $rules;
   }
 }

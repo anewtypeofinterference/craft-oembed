@@ -9,68 +9,75 @@
 namespace anti\oembed\services;
 
 use anti\oembed\oEmbed as Plugin;
+use anti\oembed\models\Provider;
 
 use Craft;
 use craft\base\Component;
-
 
 class Providers extends Component
 {
   private static $providers;
 
-  static function getProviders($pick = null): array
+  static function getProviders(?array $pick): array
   {
     if (!is_array(self::$providers)) {
-      $settings = Plugin::getInstance()->getSettings();
-      self::$providers = array_merge(require Plugin::getInstance()->getConfigPath() . 'DefaultProviders.php', $settings['providers']);
+      self::$providers = [];
+
+      foreach (Plugin::getInstance()->getSettings()->getProviders() as $handle => $config) {
+        $provider = new Provider();
+        $provider->attributes = array_merge(['handle' => $handle], $config);
+
+        if($provider->validate()) {
+          self::$providers[$handle] = $provider;
+        } else {
+          Craft::error(
+            Craft::t(
+              'oembed',
+              'Error validating provider {handle}: {errors}',
+              ['handle' => $provider->handle, 'errors' => print_r($provider->getErrors(), true)]
+            ),
+            __METHOD__
+          );
+        }
+      }
     }
 
-    if(is_array($pick)) {
+    if(is_array($pick) && !empty($pick)) {
       return array_intersect_key(self::$providers, array_flip($pick));
     }
 
     return self::$providers;
   }
 
-  public function detectProviderFromUrl(string $url, ?array $allowedProviders = null): ?string
+  static function getOptions(array $pick = []): array
   {
-    return self::searchEndpoint(self::getProviders($allowedProviders), $url);
+    $options = [];
+
+    foreach (self::getProviders($pick) as $provider) {
+      $options[] = [
+        'value' => $provider->handle,
+        'label' => $provider->label
+      ];
+    }
+
+    return $options;
   }
 
-  public function getProvider(string $handle): ?array
+  public function detectProviderFromUrl(string $url, ?array $allowedProviders = null): Provider|null
+  {
+    return self::searchForProvider(self::getProviders($allowedProviders), $url);
+  }
+
+  public function getProvider(string $handle): Provider|null
   {
     return self::getProviders()[$handle] ?? null;
   }
 
-  public function getProviderUrl(string $handle): ?string
+  private static function searchForProvider(array $providers, string $url): Provider|null
   {
-    $data = $this->getProvider($handle);
-
-    if(!$data || !isset($data['url'])) {
-      return null;
-    }
-
-    return $data['url'];
-  }
-
-  public function detectProviderUrl(string $url): ?string
-  {
-    $handle = $this->detectProviderFromUrl($url);
-
-    if($handle) {
-      return $this->getProviderUrl($handle);
-    }
-
-    return null;
-  }
-
-  private static function searchEndpoint(array $providers, string $url): ?string
-  {
-    foreach ($providers as $handle => $config) {
-      foreach ($config['patterns'] as $pattern) {
-        if (preg_match($pattern, $url)) {
-          return $handle;
-        }
+    foreach ($providers as $provider) {
+      if($provider->isProviderForUrl($url)) {
+        return $provider;
       }
     }
 
