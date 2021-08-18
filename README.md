@@ -41,11 +41,30 @@ Then you run `composer require anti/craft-oembed` as usual. You might get asked 
 ## Using Craft oEmbed
 Craft oEmbed comes with a field you can create which validates and display oEmbeds in the admin panel. In the front end the field outputs the url, so you have to run it through the service to fetch the oembed data:
 ```
-{% set oembedData = craft.oembed.get(entry.yourOembed/URLfield) %}
+{% set oembedData = entry.yourOembedField.getData() %}
 ```
 The data outputted is following the [oembed spec (see response parameters section)](https://oembed.com/)
 You can also add consuomer ptions request data when fetching the data:
 ```
-{% set oembedData = craft.oembed.get(entry.yourOembed, {
+{% set oembedData = entry.yourOembedField({
   maxwidth: 1920
 }) %}
+```
+We also provide additional fields in the data. Here is an example on how to manipulate and get embed src:
+```
+{% if video is instance of('anti\\oembed\\models\\oEmbedData') %}
+	<iframe
+		src="{{ video.getEmbedSrc({
+		background: 1,
+		autopause: 0
+		}) }}"
+		frameborder="0"
+		height="100%"
+		width="100%"
+		frameborder="0"
+		allow="autoplay; fullscreen"
+		webkitallowfullscreen
+		mozallowfullscreen
+		allowfullscreen
+	></iframe>
+{% endif %}
