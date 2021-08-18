@@ -183,7 +183,7 @@ return [
         'label' => 'JS Bin',
         'url' => 'http://jsbin.com/oembed',
         'patterns' => [
-            '|^https?://output\\.jsbin\\.com/.*$|i',
+          '|^https?://jsbin\\.com/.*|i',
         ],
     ],
     'imgur' => [
