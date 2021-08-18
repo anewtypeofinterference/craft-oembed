@@ -11,7 +11,6 @@ namespace anti\oembed\controllers;
 
 use anti\oembed\oEmbed as Plugin;
 use anti\oembed\models\DataResponse;
-use anti\oembed\models\oEmbedData;
 
 use Craft;
 use craft\web\Controller;
@@ -46,16 +45,19 @@ class DataController extends Controller
         $request = Craft::$app->getRequest();
         $plugin = Plugin::getInstance();
 
-        $input = new oEmbedData();
-        $input->url = $request->getBodyParam('url', '');
-        $input->options = $request->getBodyParam('options', []);
-        $input->allowedProviders = $request->getBodyParam('providers', null);
+        $url = $request->getBodyParam('url', '');
+        $options = $request->getBodyParam('options', []);
+        $allowedProviders = $request->getBodyParam('providers', null);
 
         $response = new DataResponse();
-        $response->fields = $input;
+        $response->fields = [
+          'url' => $url,
+          'options' => $options,
+          'allowedProviders' => $allowedProviders
+        ];
 
         // Check if provider is valid
-        if (!$plugin->providers->detectProviderFromUrl($input->url, $input->allowedProviders)) {
+        if (!$plugin->providers->detectProviderFromUrl($url, $allowedProviders)) {
           $response->success = false;
           $response->message = Craft::t('oembed', 'The url provider is not allowed here.');
 
@@ -72,7 +74,7 @@ class DataController extends Controller
         }
 
         // Try fetching data
-        $data = $plugin->oembed->get($input->url, $input->options);
+        $data = $plugin->oembed->get($url, $options);
         if(!$data) {
           $response->success = false;
           $response->message = Craft::t('oembed', "No data was returned from provided URL. Make sure that the URL is correct.");

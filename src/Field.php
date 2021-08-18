@@ -217,7 +217,7 @@ class Field extends \craft\base\Field implements PreviewableFieldInterface
       'type' => 'url',
       'name' => $this->handle,
       'inputmode' => 'url',
-      'value' => $value->getUrl(),
+      'value' => $value ? $value->getUrl() : null,
       'inputAttributes' => [
         'aria' => [
           'label' => Craft::t('site', $this->name),

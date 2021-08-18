@@ -1,0 +1,26 @@
+.oEmbedPreview {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+}
+
+.oEmbedPreview.has-embed::before {
+  content: '';
+  display: block;
+  width: 100%;
+  padding-bottom: calc(var(--height, 3) / var(--width, 4) * 100%);
+}
+
+.oEmbedPreview > div {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.oEmbedPreview > div > iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

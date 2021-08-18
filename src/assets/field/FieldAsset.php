@@ -28,7 +28,9 @@ class FieldAsset extends AssetBundle
   /**
    * @inheritdoc
    */
-  public $css = [];
+  public $css = [
+    'oembed-field.css',
+  ];
 
   /**
    * @inheritdoc

@@ -2,22 +2,30 @@
   not (size ?? false) ? 'fullwidth' : null,
 ]|filter) %}
 
-{#             'id' => "$id-preview",
-            'inputId' => "$id",
-            'class' => ['flex-grow', 'fullwidth'],
-            'value' => $value #}
-
-<div id="{{ id }}" class="oEmbedPreview">
-  {% set data = errors is empty and value ? craft.oembed.get(value) : null %}
+<h6>Preview</h6>
+{% set data = value ? value.getData({
+  maxwidth: 1000
+}) : null %}
+<div
+  id="{{ id }}"
+  class="oEmbedPreview"
   {% if data %}
+    style="--width: {{ data.width }}; --height: {{ data.height }};"
+  {% endif %}
+>
+  {% if data %}
+    <div>
     {% switch data.type %}
       {% case "rich" or "video" %}
         {{ data.html|raw }}
       {% case "photo" %}
         <img src="{{ data.url }}" alt="{{ data.title ?? '' }}" width="{{ data.width }}" height="{{ data.height }}" />
     {% endswitch %}
+    </div>
   {% endif %}
-</div>{% set jsId = id|namespaceInputId|e('js') %}
+</div>
+
+{% set jsId = id|namespaceInputId|e('js') %}
 
 {% js %}
   new ANTI.oEmbedPreview(document.getElementById("{{ id|namespaceInputId|e('js') }}"), document.getElementById("{{ inputId|namespaceInputId|e('js') }}"), JSON.parse('{{ providers|json_encode|raw }}'));

@@ -22,12 +22,21 @@ class oEmbedPreview {
     Craft.sendActionRequest('POST', 'oembed/data/get-data', {
       data: {
         url: evt.target.value,
+        options: {
+          maxwidth: 1000
+        },
         providers: this._providers
       }
     }).then((res) => {
       if(res.data.success) {
-        this._root.replaceChildren(res.data.data.html);
+        const div = document.createElement('div');
+        div.innerHTML = res.data.data.html || '';
+        this._root.style.setProperty('--width', res.data.data.width);
+        this._root.style.setProperty('--height', res.data.data.height);
+        this._root.classList.add('has-embed');
+        this._root.replaceChildren(div);
       } else {
+        this._root.classList.remove('has-embed');
         const ul = document.createElement('ul');
         ul.classList.add('errors');
         const li = document.createElement('li');
