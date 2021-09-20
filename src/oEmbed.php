@@ -104,7 +104,7 @@ class oEmbed extends Plugin
          */
         Craft::info(
             Craft::t(
-                'fetch',
+                'oembed',
                 '{name} plugin loaded',
                 ['name' => $this->name]
             ),
